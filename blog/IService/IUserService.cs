@@ -5,8 +5,8 @@ namespace blog.IService
 {
     public interface IUserService
     {
-        public Task<string> login(string email, string password);
+        public Task<Response<Users>> login(string email, string password);
         public void logout();
-        public Task<string> register(string name, string email, string password);
+        public Task<Response<Users>> register(string name, string email, string password);
     }
 }

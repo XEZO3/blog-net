@@ -16,29 +16,44 @@ namespace blog.Service
             _userManager = userManager;
             _signInManager = signInManager;
         }
-        public async Task<string> login(string username, string password)
+        public async Task<Response<Users>> login(string username, string password)
         {
+            Response<Users> response = new Response<Users>();
             var result = await _signInManager.PasswordSignInAsync(username, password, false, false);
             if (result.Succeeded)
             {
-                return "success";
+                response.IsSuccess = true;
             }
-            return "invalid username or password";
+            else { 
+                response.IsSuccess =false;
+                response.Message = "username or password is incorrect";
+            }
+            return response;
+            
         }
         public async void logout() {
             await _signInManager.SignOutAsync();
         }
-        public async Task<string> register(string name,string email, string password)
+        public async Task<Response<Users>> register(string name,string email, string password)
         {
+            Response<Users> response = new Response<Users>();
             var user = new Users {Email = email ,Name = name,UserName = email,EmailConfirmed = true};
             var result = await _userManager.CreateAsync(user, password);
 
             if (result.Succeeded)
             {
-                return "success";
+                response.IsSuccess = true;
             }
-            Console.WriteLine(result.Errors);
-            return ""+result.Errors;                      
+            else {
+                response.IsSuccess = false;
+                foreach (var error in result.Errors)
+                {
+                    response.Message += error.Description;
+                }
+            }
+            
+           
+            return response;                      
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using blog.IService;
 using blog.Models;
+using blog.Models.VM;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -26,7 +27,7 @@ namespace blog.Controllers
         public async Task<IActionResult> Index()
         {
             var data = await _postService.GetAll();
-            return View(data);
+            return View(data.result);
         }
 
         // GET: PostsController/Details/5
@@ -45,41 +46,48 @@ namespace blog.Controllers
         // POST: PostsController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Posts post)
+        public async Task<IActionResult> Create(PostVM post)
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                post.UserId = user.Id;
-
-                bool result = await _postService.Create(post);
-                if (result)
+                if (ModelState.IsValid)
                 {
-                    return RedirectToAction(nameof(Index));
+                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    Posts P = new Posts { Content = post.Content, ImageUrl = post.ImageUrl, UserId = userId };
+
+                    var result = await _postService.Create(P);
+                    if (result.IsSuccess)
+                    {
+                        return RedirectToAction(nameof(Index));
+                    }
+                    else
+                    {
+                        return View();
+                    }
                 }
-                else {
-                    return View();
-                }
-                
+                return View(post);
             }
             catch
             {
-                return View();
+                return View(post);
             }
         }
         [HttpGet("Posts/UserPosts/{id?}")]
         public async Task<IActionResult> UserPosts(string id) {
-            IEnumerable<Posts> data;
+            Response<IEnumerable<Posts>> response;
+            IEnumerable<Posts> posts;
             if (id != null)
             {
-                
-                data = await _postService.GetAll(x => x.UserId == id);
-                return View(data);
+
+                response = await _postService.GetAll(x => x.UserId == id);
+                posts = response.result;
+                return View(posts);
             }
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            data = await _postService.GetAll(x=>x.UserId == userId);
-            return View(data);
+            response = await _postService.GetAll(x=>x.UserId == userId);
+            posts = response.result;
+            return View(posts);
         }
 
         // GET: PostsController/Edit/5

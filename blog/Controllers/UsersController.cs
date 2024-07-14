@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using blog.Data;
 using blog.Models;
 using blog.IService;
+using blog.Models.VM;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace blog.Controllers
 {
@@ -26,20 +29,18 @@ namespace blog.Controllers
             return View();
         }
         [HttpPost]
-        public async Task<IActionResult> Register([FromForm] IFormCollection form )
+        public async Task<IActionResult> Register(RegisterVM model )
         {
-            string? name = form["name"];
-            string? password = form["password"];
-            string? email = form["email"];
+         
           
-            var result = await _userService.register(name, email,password);
-            if (result == "success")
+            var response = await _userService.register(model.Name, model.Email,model.Password);
+            if (response.IsSuccess)
             {
                 return RedirectToAction("Login", "Users");
 
             }
-
-            return BadRequest(new { Message = result });
+            ModelState.AddModelError("CustomError", response.Message);
+            return View();
         }
         [HttpGet]
         public IActionResult Login()
@@ -48,17 +49,16 @@ namespace blog.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login([FromForm]IFormCollection model)
+        public async Task<IActionResult> Login(LoginVM model)
         {
-            string? email = model["email"];
-            string? password = model["password"];
-            var result = await _userService.login(email,password);
-            if (result == "success")
+            
+            var response = await _userService.login(model.Email, model.Password);
+            if (response.IsSuccess)
             {
                 return RedirectToAction("Index", "Home");
             }
             
-            ModelState.AddModelError(string.Empty, result);
+            ModelState.AddModelError("CustomError", response.Message);
             return View(model);
         }
         [HttpPost]
