@@ -1,0 +1,19 @@
+﻿@using Microsoft.AspNetCore.Identity
+@model IEnumerable<blog.Models.Posts>
+@inject UserManager<blog.Models.Users> UserManager
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+<div class="container">
+    @foreach (var item in Model)
+    {
+        <partial name="_PostBodyPartial" for="@item"></partial>
+    }
+</div>
